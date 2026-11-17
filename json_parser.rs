@@ -4,6 +4,10 @@ fn _get_arr_of_vers(data: &str) -> Option<(Vec<String>, Vec<String>)>{
     let mut count = 0;
     let mut level = 0;
     let mut is_here_text = false;
+
+
+    let mut name: HashMap<&str, HashMap<&str, &str>> = HashMap::new();
+    let mut for_name = String::new();
     let mut version: HashMap<&str, &str> = HashMap::new();
     loop {
         if level == 0 && count > 1 {
@@ -12,7 +16,13 @@ fn _get_arr_of_vers(data: &str) -> Option<(Vec<String>, Vec<String>)>{
         if let Some(n) = data.chars().nth(count) {
             count += 1;
 
+            if n.is_whitespace() {
+                continue;
+            }
             match n.to_string().as_str() {
+                ":" => {
+                    continue;
+               }
                 "{" => {
                     level += 1;
                 },
@@ -22,9 +32,6 @@ fn _get_arr_of_vers(data: &str) -> Option<(Vec<String>, Vec<String>)>{
                 "\"" => {
                     is_here_text = !is_here_text;
                 },
-                " " => {
-                    continue;
-                }
                 _ => {
                     if is_here_text == false{
                         continue;
@@ -41,9 +48,22 @@ fn _get_arr_of_vers(data: &str) -> Option<(Vec<String>, Vec<String>)>{
                             counter += 1;
                             continue;
                         }
-                        break;
+                        
                     }
-                    
+
+                    if level == 1 {
+                        for_name.push_str(&word);
+                    } else if word.as_str().starts_with('v') {
+
+                    } else if word.as_str().starts_with('u') {
+
+                    } else if word.as_str().starts_with('d') {
+
+                    } else if word.as_str().starts_with('s') {
+
+                    } else {
+                        
+                    }
                 }
             }
                 
