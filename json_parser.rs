@@ -73,6 +73,7 @@ fn get_arr_of_vers(data: &str) -> Option<HashMap<String, Vec<String>>>{
                     }
 
                     let mut word= String::new();
+                    word.push(n);
                     let mut counter = count;
                     loop {
                         if let Some(char) = data.chars().nth(counter) {
