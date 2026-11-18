@@ -1,43 +1,67 @@
 mod json_parser;
 
+use json_parser::get_arr_of_vers;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
-    if args[1].as_str().len() < 3 {
-        error_output("non-existent function");
+    let command = match args.get(1) {
+        Some(a) => {
+            if a.len() < 3 {
+                error_output("non-existent function");
+                help_fn();
+                std::process::exit(1);
+            } else {
+                a
+            }
+        },
+        _ => {
+            error_output("non-existent function");
+            help_fn();
+            std::process::exit(1);
+        }
+    };
 
-        help_fn();
-
-        std::process::exit(1);
-    }
-
-    let command = args[1].as_str();
+    let command = command.as_str();
 
     match command {
         "update" => {
 
         },
         "install" => {
-            if args[2].as_str().len() <= 1 {
-                error_output("programm name must contain more than 1 chair");
-
-                help_fn();
-            }
+            let second = match args.get(2) {
+                Some(a) => {
+                    if a.len() > 2 {
+                        a
+                    } else {
+                        error_output("The utility name cannot be shorter than 2 characters!");
+                        help_fn();
+                        std::process::exit(1);
+                    }
+                },
+                _ => {
+                    error_output("Didn't you add what u wanna download?");
+                    help_fn();
+                    std::process::exit(1);
+                }
+            };
 
             let url = "https://raw.githubusercontent.com/bypassOS-dev/storage_bypassOS/refs/heads/main/storage.json";
 
             match ureq::get(url).call() {
                 Ok(response) => {
                     if let Ok(text) = response.into_string() {
-                        
-                        println!("{text}");
+                        if let Some(_json) = get_arr_of_vers(&text) {
+                            
+                        } else {
+                            error_output("The file downloaded from the server is incorrect! Please let us know!");
+                        }
                     }else {
                         error_output("Can't download file!");
                     };
                     
                 }
                 Err(_) => {
-
+                    error_output("We were unable to download file.\nMaybe you don't have internet?");
                 }
             }
         }
