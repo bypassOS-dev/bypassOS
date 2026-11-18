@@ -30,10 +30,10 @@ fn main() {
         "install" => {
             let second = match args.get(2) {
                 Some(a) => {
-                    if a.len() > 2 {
+                    if a.len() >= 2 {
                         a
                     } else {
-                        error_output("The utility name cannot be shorter than 2 characters!");
+                        error_output("The utility name cannot be shorter than 1 characters!");
                         help_fn();
                         std::process::exit(1);
                     }
@@ -50,8 +50,13 @@ fn main() {
             match ureq::get(url).call() {
                 Ok(response) => {
                     if let Ok(text) = response.into_string() {
-                        if let Some(_json) = get_arr_of_vers(&text) {
-                            
+                        if let Some(json) = get_arr_of_vers(&text) {
+                            if let Some(_package_data) = json.get(second) {
+                                // We need create a file that will keep data about all utilites version. Well... Inside /etc/... for example
+                                // and if utility isn't exist just add it to file (with version). If exist just update  
+                            } else {
+                                error_output("Sorry we were unable find your utility inside our storage.\n May you check utility name or send utility name to us and we'll add your utility?");
+                            }
                         } else {
                             error_output("The file downloaded from the server is incorrect! Please let us know!");
                         }
@@ -65,7 +70,11 @@ fn main() {
                 }
             }
         }
-        _ => {}
+        _ => {
+            error_output("non-existent function");
+            help_fn();
+            std::process::exit(1);
+        }
     }
 }
 
