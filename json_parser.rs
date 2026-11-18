@@ -32,12 +32,16 @@ fn get_arr_of_vers(data: &str) -> Option<HashMap<String, Vec<String>>>{
             vector.push(depends.clone());
             vector.push(sha256.clone());
             main.insert(for_name.clone(), vector.clone());
-        }
-        println!(
-            "name: '{}', v: {}, u: {}, d: {}, s: {}",
-            for_name, is_version_ready, is_url_ready, is_depends_ready, is_sha256_ready
-        );
 
+            is_version_ready = false;
+            is_url_ready = false;
+            is_depends_ready = false;
+            is_sha256_ready = false;
+
+        }
+
+        // level == 0 mean what parser already found last "}"
+        // && count > 1 mean what must hapens more than 1 operation
         if level == 0 && count > 1 {
             return Some(main.clone())
         }
@@ -48,9 +52,10 @@ fn get_arr_of_vers(data: &str) -> Option<HashMap<String, Vec<String>>>{
                 continue;
             }
             match n.to_string().as_str() {
+                // Skip - isn't need for us
                 ":" => {
                     continue;
-               }
+                }
                 "{" => {
                     level += 1;
                 },
@@ -111,10 +116,8 @@ fn get_arr_of_vers(data: &str) -> Option<HashMap<String, Vec<String>>>{
                         sha256.push_str(&word.clone());
                         is_sha256_ready = true;
                         is_sha256_here = false;
-                    }
-
-                    if level == 1 {
-                        word.clear();
+                    } if level == 1 {
+                        for_name.clear();
                         for_name.push_str(&word.clone());
                     } else if word.as_str().starts_with('v') && level == 2 {
                         is_version_here = true;
@@ -149,9 +152,19 @@ mod tests {
     "sha256": "1d37008822711cff8f156604217edf4b220d204691e79c4c23c308cb6dea6714"
   }
 }"#;
+    
+    let a = get_arr_of_vers(json).unwrap();
+    let mut qwe = Vec::new();
+    qwe.push("0.2.0".to_string());
+    qwe.push("https://github.com/user-attachments/files/33284356/Archive.tar.gz".to_string());
+    qwe.push("".to_string());
+    qwe.push("1d37008822711cff8f156604217edf4b220d204691e79c4c23c308cb6dea6714".to_string());
 
-    if let Some(a) = get_arr_of_vers(&json) {
-        println!("{:?}", a);
-    };
+    let mut qqq = HashMap::new();
+    qqq.insert("blinddpi".to_string(), qwe);
+    assert_eq!(
+        a,
+        qqq
+    );
     }
 }
