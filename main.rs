@@ -1,5 +1,7 @@
 mod json_parser;
 
+use std::io::{BufRead, BufReader};
+
 use json_parser::get_arr_of_vers;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -52,8 +54,27 @@ fn main() {
                     if let Ok(text) = response.into_string() {
                         if let Some(json) = get_arr_of_vers(&text) {
                             if let Some(_package_data) = json.get(second) {
-                                // We need create a file that will keep data about all utilites version. Well... Inside /etc/... for example
+                                // We need create a file that will keep data about all utilites version. Well... Inside /var/lib... for example
                                 // and if utility isn't exist just add it to file (with version). If exist just update  
+                                let path = std::path::Path::new("/var/lib/bps/installed_utility.txt");
+                                if !path.exists() {
+                                    if let Some(parent) = path.parent() {
+                                        let _ = std::fs::create_dir_all(parent);
+                                    }
+
+                                    if let Err(_) = std::fs::File::create(path) {
+                                        error_output("We couldn't find and create file 'installed_utility.txt'!\nTry to create file yourself inside '/var/lib/bps/'");
+                                    };
+                                }
+
+                                if let Ok(content) = std::fs::File::open(path) {
+                                    let reader = BufReader::new(content);
+
+                                    for line in reader.lines() {
+                                        
+                                    }
+                                }
+
                             } else {
                                 error_output("Sorry we were unable find your utility inside our storage.\n May you check utility name or send utility name to us and we'll add your utility?");
                             }
