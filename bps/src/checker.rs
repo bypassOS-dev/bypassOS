@@ -1,4 +1,4 @@
-pub fn is_utility_exist(line: String, utility: String) -> Option<Vec<String>> {
+pub fn is_utility_exist(line: String, utility: &String) -> Option<Vec<String>> {
     let line = line.trim();
     if line.starts_with('#') {
         return None;

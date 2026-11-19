@@ -31,7 +31,7 @@ fn main() {
 
         },
         "install" => {
-            let second = match args.get(2) {
+            let second_args = match args.get(2) {
                 Some(a) => {
                     if a.len() >= 2 {
                         a
@@ -49,12 +49,12 @@ fn main() {
             };
 
             let url = "https://raw.githubusercontent.com/bypassOS-dev/storage_bypassOS/refs/heads/main/storage.json";
-
+            println!("[INFO] Downloading file with supported utilites...");
             match ureq::get(url).call() {
                 Ok(response) => {
                     if let Ok(text) = response.into_string() {
                         if let Some(json) = get_arr_of_vers(&text) {
-                            if let Some(package_data) = json.get(second) {
+                            if let Some(package_data) = json.get(second_args) {
                                 // We need create a file that will keep data about all utilites version. Well... Inside /var/lib... for example
                                 // and if utility isn't exist just add it to file (with version). If exist just update  
                                 let path = std::path::Path::new("/var/lib/bps/installed_utility.txt");
@@ -67,18 +67,37 @@ fn main() {
                                         error_output("We couldn't find and create file 'installed_utility.txt'!\nTry to create file yourself inside '/var/lib/bps/'");
                                     };
                                 }
-
+                                println!("[INFO] Checking local data base...");
                                 if let Ok(content) = std::fs::File::open(path) {
                                     let reader = BufReader::new(content);
 
                                     for line in reader.lines() {
                                         if let Ok(line) = line {
-                                            if let Some(info) = is_utility_exist(line, second) {
-
+                                            if let Some(info) = is_utility_exist(line, second_args) {
+                                                if let Some(vers) = package_data.get(0) {
+                                                    if let Some(vers_from_local) = info.get(2) {
+                                                        if vers == vers_from_local {
+                                                            println!("\n\nThis utility has already been downloaded!");
+                                                            std::process::exit(1);
+                                                        }
+                                                    }
+                                                    
+                                                };
+                                            } else {
+                                                if let Some(target_url) = package_data.get(1) {
+                                                    match ureq::get(target_url).call() {
+                                                        Ok(response) => {
+                                                            
+                                                        }
+                                                        Err(_) => {
+                                                            error_output("We were unable to download file.\nMaybe you don't have internet?");
+                                                        }
+                                                    }
+                                                };
                                             }
                                         } 
                                     }
-                                }
+                                } 
 
                             } else {
                                 error_output("Sorry we were unable find your utility inside our storage.\n May you check utility name or send utility name to us and we'll add your utility?");
@@ -103,6 +122,10 @@ fn main() {
         }
     }
 }
+
+
+
+
 
 fn help_fn() {
     println!("==============================================");
