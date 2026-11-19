@@ -2,7 +2,7 @@ mod json_parser;
 mod checker;
 
 use std::io::{BufRead, BufReader};
-
+use checker::is_utility_exist;
 use json_parser::get_arr_of_vers;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -54,7 +54,7 @@ fn main() {
                 Ok(response) => {
                     if let Ok(text) = response.into_string() {
                         if let Some(json) = get_arr_of_vers(&text) {
-                            if let Some(_package_data) = json.get(second) {
+                            if let Some(package_data) = json.get(second) {
                                 // We need create a file that will keep data about all utilites version. Well... Inside /var/lib... for example
                                 // and if utility isn't exist just add it to file (with version). If exist just update  
                                 let path = std::path::Path::new("/var/lib/bps/installed_utility.txt");
@@ -73,7 +73,9 @@ fn main() {
 
                                     for line in reader.lines() {
                                         if let Ok(line) = line {
+                                            if let Some(info) = is_utility_exist(line, second) {
 
+                                            }
                                         } 
                                     }
                                 }
