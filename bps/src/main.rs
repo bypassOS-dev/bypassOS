@@ -1,5 +1,6 @@
 mod json_parser;
 mod checker;
+mod help_functions;
 
 use std::io::{BufRead, BufReader, Write};
 use checker::is_utility_exist;
