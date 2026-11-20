@@ -1,7 +1,7 @@
 mod json_parser;
 mod checker;
 
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
 use checker::is_utility_exist;
 use json_parser::get_arr_of_vers;
 fn main() {
@@ -70,10 +70,19 @@ fn main() {
                                 println!("[INFO] Checking local data base...");
                                 if let Ok(content) = std::fs::File::open(path) {
                                     let reader = BufReader::new(content);
+                                    
+                                    let mut is_utility_downloaded: bool = false;
 
+                                    let mut number: i32;
                                     for line in reader.lines() {
                                         if let Ok(line) = line {
                                             if let Some(info) = is_utility_exist(line, second_args) {
+                                                is_utility_downloaded = true;
+                                                if let Some(num) = info.get(0) {
+                                                    if let Ok(num) = num.trim().parse() {
+                                                        number = num;
+                                                    }
+                                                }
                                                 if let Some(vers) = package_data.get(0) {
                                                     if let Some(vers_from_local) = info.get(2) {
                                                         if vers == vers_from_local {
@@ -83,19 +92,44 @@ fn main() {
                                                     }
                                                     
                                                 };
-                                            } else {
-                                                if let Some(target_url) = package_data.get(1) {
-                                                    match ureq::get(target_url).call() {
-                                                        Ok(response) => {
-                                                            
-                                                        }
-                                                        Err(_) => {
-                                                            error_output("We were unable to download file.\nMaybe you don't have internet?");
-                                                        }
-                                                    }
-                                                };
                                             }
                                         } 
+                                    }
+
+                                    if !is_utility_downloaded {
+                                        println!("[INFO] Package not found. Downloading...");
+                                    } else {
+                                        println!("[INFO] Package found, but new version is available. So update...");
+                                    }
+
+
+                                    if let Some(target_url) = package_data.get(1) {
+                                        let archive_path = format!("/tmp/{}", second_args);
+
+                                        match ureq::get(target_url).call() {
+                                            Ok(response) => {
+                                                let mut file = std::fs::File::create(&archive_path).expect("Failed to create temp file");
+                                                std::io::copy(&mut response.into_reader(), &mut file).expect("Failed to download");
+
+                                                println!("[INFO] Extracting archive to system...");
+
+                                                let status = std::process::Command::new("tar")
+                                                    .args(["-xzf", &archive_path, "-C", "/"])
+                                                    .status()
+                                                    .expect("Extract Error");
+
+                                                if status.success() {
+                                                    println!("[OK] Package {} successfully installed!", second_args);
+
+                                                    if let Ok(db_file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+                                                        
+                                                    }
+                                                }
+                                            },
+                                            Err(_) => {
+                                                error_output("We were unable to download file.\nMaybe you don't have internet?");
+                                            }
+                                        }
                                     }
                                 } 
 
