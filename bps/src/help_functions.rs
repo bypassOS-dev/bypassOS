@@ -26,7 +26,11 @@ pub fn repleace_str(path: &str, need_num: i32, need_str: &str) -> io::Result<()>
         .collect::<Vec<&str>>()
         .join("\n");
         
-    
-        
-    Ok(())
+    let final_output = if content.ends_with("\n") {
+        format!("{updated}\n")
+    } else {
+        updated
+    };
+
+    fs::write(path, final_output)
 }

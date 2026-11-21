@@ -2,7 +2,8 @@ mod json_parser;
 mod checker;
 mod help_functions;
 
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader};
+use help_functions::repleace_str;
 use checker::is_utility_exist;
 use json_parser::get_arr_of_vers;
 fn main() {
@@ -74,11 +75,19 @@ fn main() {
                                     
                                     let mut is_utility_downloaded: bool = false;
 
-                                    let mut number: i32;
+                                    let mut number: i32 = 0;
+                                    let mut utility_name: String = String::new();
+                                    let mut version: String = String::new();
                                     for line in reader.lines() {
                                         if let Ok(line) = line {
                                             if let Some(info) = is_utility_exist(line, second_args) {
                                                 is_utility_downloaded = true;
+                                                if let Some(name) = info.get(1) {
+                                                    utility_name = name.clone();
+                                                }
+                                                if let Some(version1) = info.get(2) {
+                                                    version = version1.clone();
+                                                }
                                                 if let Some(num) = info.get(0) {
                                                     if let Ok(num) = num.trim().parse() {
                                                         number = num;
@@ -121,9 +130,13 @@ fn main() {
 
                                                 if status.success() {
                                                     println!("[OK] Package {} successfully installed!", second_args);
+                                                    if let Some(path) = path.to_str() {
+                                                        if is_utility_downloaded {
+                                                            let need_str = format!("{number}. {utility_name} ---> {version}");
+                                                            if let Ok(_) = repleace_str(path, number, &need_str) {};
+                                                        } else {
 
-                                                    if let Ok(db_file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
-                                                        
+                                                        }
                                                     }
                                                 }
                                             },
