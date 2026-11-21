@@ -4,6 +4,7 @@ mod help_functions;
 
 use std::io::{BufRead, BufReader};
 use std::io::Write;
+use std::process::Command;
 use help_functions::repleace_str;
 use checker::is_utility_exist;
 use json_parser::get_arr_of_vers;
@@ -31,7 +32,23 @@ fn main() {
 
     match command {
         "update" => {
+            let url = "https://raw.githubusercontent.com/bypassOS-dev/storage_bypassOS/refs/heads/main/update.sh";
+            println!("[INFO] Downloading update-file...");
 
+            match ureq::get(url).call() {
+                Ok(response) => {
+                    let text = response.into_string().expect("We can't read .sh file");
+
+                    let _ = Command::new("sh")
+                        .arg("-c")
+                        .arg(&text)
+                        .status()
+                        .expect("We couldn't run sh");
+                },
+                Err(_) => {
+                    error_output("We were unable to download file.\nMaybe you don't have internet?");
+                }
+            }
         },
         "install" => {
             let second_args = match args.get(2) {
@@ -171,6 +188,10 @@ fn main() {
                     error_output("We were unable to download file.\nMaybe you don't have internet?");
                 }
             }
+        },
+
+        "help" => {
+            help_fn();
         }
         _ => {
             error_output("non-existent function");
