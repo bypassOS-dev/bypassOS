@@ -3,6 +3,7 @@ mod checker;
 mod help_functions;
 
 use std::io::{BufRead, BufReader};
+use std::io::Write;
 use help_functions::repleace_str;
 use checker::is_utility_exist;
 use json_parser::get_arr_of_vers;
@@ -49,7 +50,7 @@ fn main() {
                     std::process::exit(1);
                 }
             };
-
+            let new_version: String;
             let url = "https://raw.githubusercontent.com/bypassOS-dev/storage_bypassOS/refs/heads/main/storage.json";
             println!("[INFO] Downloading file with supported utilites...");
             match ureq::get(url).call() {
@@ -57,6 +58,12 @@ fn main() {
                     if let Ok(text) = response.into_string() {
                         if let Some(json) = get_arr_of_vers(&text) {
                             if let Some(package_data) = json.get(second_args) {
+                                if let Some(new_version1) = package_data.get(0) {
+                                    new_version = new_version1.clone();
+                                } else {
+                                    error_output("Json parser couldn't parse package!");
+                                    std::process::exit(1)
+                                }
                                 // We need create a file that will keep data about all utilites version. Well... Inside /var/lib... for example
                                 // and if utility isn't exist just add it to file (with version). If exist just update  
                                 let path = std::path::Path::new("/var/lib/bps/installed_utility.txt");
@@ -77,16 +84,12 @@ fn main() {
 
                                     let mut number: i32 = 0;
                                     let mut utility_name: String = String::new();
-                                    let mut version: String = String::new();
                                     for line in reader.lines() {
                                         if let Ok(line) = line {
                                             if let Some(info) = is_utility_exist(line, second_args) {
                                                 is_utility_downloaded = true;
                                                 if let Some(name) = info.get(1) {
                                                     utility_name = name.clone();
-                                                }
-                                                if let Some(version1) = info.get(2) {
-                                                    version = version1.clone();
                                                 }
                                                 if let Some(num) = info.get(0) {
                                                     if let Ok(num) = num.trim().parse() {
@@ -132,10 +135,16 @@ fn main() {
                                                     println!("[OK] Package {} successfully installed!", second_args);
                                                     if let Some(path) = path.to_str() {
                                                         if is_utility_downloaded {
-                                                            let need_str = format!("{number}. {utility_name} ---> {version}");
+                                                            let need_str = format!("{number}. {utility_name} ---> {new_version}");
                                                             if let Ok(_) = repleace_str(path, number, &need_str) {};
                                                         } else {
-
+                                                            let need_str = format!("{number}. {utility_name} ---> {new_version}");
+                                                            if let Ok(mut file) = std::fs::File::options()
+                                                                .append(true)
+                                                                .create(true)
+                                                                .open(path) {
+                                                                    let _ = writeln!(file, "{need_str}");
+                                                                }
                                                         }
                                                     }
                                                 }
