@@ -100,14 +100,13 @@ fn main() {
                                     let mut is_utility_downloaded: bool = false;
 
                                     let mut number: i32 = 0;
-                                    let mut utility_name: String = String::new();
+                                    let mut max_num= 0;
+
                                     for line in reader.lines() {
+                                        max_num += 1;
                                         if let Ok(line) = line {
                                             if let Some(info) = is_utility_exist(line, second_args) {
                                                 is_utility_downloaded = true;
-                                                if let Some(name) = info.get(1) {
-                                                    utility_name = name.clone();
-                                                }
                                                 if let Some(num) = info.get(0) {
                                                     if let Ok(num) = num.trim().parse() {
                                                         number = num;
@@ -124,6 +123,10 @@ fn main() {
                                                 };
                                             }
                                         } 
+                                    }
+
+                                    if number == 0 { 
+                                        number = max_num + 1
                                     }
 
                                     if !is_utility_downloaded {
@@ -152,10 +155,10 @@ fn main() {
                                                     println!("[OK] Package {} successfully installed!", second_args);
                                                     if let Some(path) = path.to_str() {
                                                         if is_utility_downloaded {
-                                                            let need_str = format!("{number}. {utility_name} ---> {new_version}");
+                                                            let need_str = format!("{number}. {second_args} ---> {new_version}");
                                                             if let Ok(_) = repleace_str(path, number, &need_str) {};
                                                         } else {
-                                                            let need_str = format!("{number}. {utility_name} ---> {new_version}");
+                                                            let need_str = format!("{number}. {second_args} ---> {new_version}");
                                                             if let Ok(mut file) = std::fs::File::options()
                                                                 .append(true)
                                                                 .create(true)
