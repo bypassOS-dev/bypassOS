@@ -20,7 +20,7 @@ pub fn get_arr_of_vers(data: &str) -> Option<HashMap<String, Vec<String>>>{
         i += 4;
 
         let sha256 = parts[i].to_string();
-        i += 4;
+        i += 2;
 
         main.insert(name, vec![version, url, depends, sha256]);
     }
@@ -70,4 +70,61 @@ mod tests {
         qqq
     );
     }
+
+    #[test]
+    fn multiple_packages() {
+        let json = r#"{
+          "pkg1": { "version": "1.0", "url": "http://a.com", "depends": "dep1", "sha256": "111" },
+          "pkg2": { "version": "2.0", "url": "http://b.com", "depends": "", "sha256": "222" }
+        }"#;
+
+        let res = get_arr_of_vers(json).unwrap();
+        assert_eq!(res.len(), 2);
+        assert_eq!(res["pkg1"][0], "1.0");
+        assert_eq!(res["pkg2"][1], "http://b.com");
+        assert_eq!(res["pkg1"][2], "dep1");
+        assert_eq!(res["pkg2"][3], "222");
+    }
+
+
+        #[test]
+    fn test_four_short_packages() {
+        let json = r#"{
+  "pkg1": {
+    "version": "1.0",
+    "url": "http://a.org",
+    "depends": "",
+    "sha256": "111"
+  },
+  "pkg2": {
+    "version": "2.1",
+    "url": "http://b.org",
+    "depends": "pkg1",
+    "sha256": "222"
+  },
+  "pkg3": {
+    "version": "0.5",
+    "url": "http://c.org",
+    "depends": "pkg1, pkg2",
+    "sha256": "333"
+  },
+  "pkg4": {
+    "version": "3.0",
+    "url": "http://d.org",
+    "depends": "",
+    "sha256": "444"
+  }
+}"#;
+
+        let res = get_arr_of_vers(json).unwrap();
+
+        let mut expected = HashMap::new();
+        expected.insert("pkg1".to_string(), vec!["1.0".to_string(), "http://a.org".to_string(), "".to_string(), "111".to_string()]);
+        expected.insert("pkg2".to_string(), vec!["2.1".to_string(), "http://b.org".to_string(), "pkg1".to_string(), "222".to_string()]);
+        expected.insert("pkg3".to_string(), vec!["0.5".to_string(), "http://c.org".to_string(), "pkg1, pkg2".to_string(), "333".to_string()]);
+        expected.insert("pkg4".to_string(), vec!["3.0".to_string(), "http://d.org".to_string(), "".to_string(), "444".to_string()]);
+
+        assert_eq!(res, expected);
+    }
+
 }
