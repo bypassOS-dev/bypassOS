@@ -6,18 +6,17 @@ pub fn get_arr_of_vers(data: &str) -> Option<HashMap<String, Vec<String>>>{
     let mut is_url_here = false;
     let mut is_depends_here = false;
     let mut is_sha256_here = false;
-
+    //==========================================
     let mut is_version_ready = false;
     let mut is_url_ready = false;
     let mut is_depends_ready = false;
     let mut is_sha256_ready = false;
-
+    //=========================================
     let mut count = 0;
     let mut level = 0;  
     let mut is_here_text = false;
     let mut main: HashMap<String, Vec<String>> = HashMap::new();
-
-
+    //=============================================================
     let mut for_name = String::new();
     let mut version = String::new();
     let mut url = String::new();
@@ -25,6 +24,7 @@ pub fn get_arr_of_vers(data: &str) -> Option<HashMap<String, Vec<String>>>{
     let mut sha256 = String::new();
     //======================================================================
     loop {
+        // 
         if is_depends_ready && is_sha256_ready && is_url_ready && is_version_ready {
             let mut vector: Vec<String> = Vec::new();
             vector.push(version.clone());
@@ -63,13 +63,13 @@ pub fn get_arr_of_vers(data: &str) -> Option<HashMap<String, Vec<String>>>{
                     level -= 1;
                 },
                 "[" => {
+                    continue;
+                },
+                "]" => {
                     if is_depends_here {
                         is_depends_ready = true;
                         is_depends_here = false;
                     }
-                },
-                "]" => {
-
                 },
                 "\"" => {
                     is_here_text = !is_here_text;
@@ -118,18 +118,18 @@ pub fn get_arr_of_vers(data: &str) -> Option<HashMap<String, Vec<String>>>{
                         sha256.push_str(&word.clone());
                         is_sha256_ready = true;
                         is_sha256_here = false;
-                    } if level == 1 {
+                    } else if level == 1 {
                         for_name.clear();
                         for_name.push_str(&word.clone());
-                    } else if word.as_str().starts_with('v') && level == 2 {
-                        is_version_here = true;
-                    } else if word.as_str().starts_with('u') && level == 2 {
-                        is_url_here = true;
-                    } else if word.as_str().starts_with('d') && level == 2 {
-                        is_depends_here = true;
-                    } else if word.as_str().starts_with('s') && level == 2 {
-                        is_sha256_here = true;
-                    }
+                    } else if level == 2 {
+                        match word.as_str() {
+                            "version" => is_version_here = true,
+                            "url" => is_url_here = true,
+                            "depends" => is_depends_here = true,
+                            "sha256" => is_sha256_here = true,
+                            _ => {}
+                        }
+                    } 
                 }
             }
                 
@@ -138,6 +138,18 @@ pub fn get_arr_of_vers(data: &str) -> Option<HashMap<String, Vec<String>>>{
         };
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #[cfg(test)]
