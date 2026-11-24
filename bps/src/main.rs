@@ -1,13 +1,14 @@
 mod json_parser;
 mod checker;
-mod help_functions;
+pub mod options;
+pub mod usefull_fun;
 
 use std::io::{BufRead, BufReader};
 use std::io::Write;
-use std::process::Command;
-use help_functions::repleace_str;
 use checker::is_utility_exist;
 use json_parser::get_arr_of_vers;
+use options::update::update_package;
+use usefull_fun::{error_output::{error_output, help_fn}, help_functions::repleace_str};
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
@@ -32,23 +33,7 @@ fn main() {
 
     match command {
         "update" => {
-            let url = "https://raw.githubusercontent.com/bypassOS-dev/storage_bypassOS/refs/heads/main/update.sh";
-            println!("[INFO] Downloading update-file...");
-
-            match ureq::get(url).call() {
-                Ok(response) => {
-                    let text = response.into_string().expect("We can't read .sh file");
-
-                    let _ = Command::new("sh")
-                        .arg("-c")
-                        .arg(&text)
-                        .status()
-                        .expect("We couldn't run sh");
-                },
-                Err(_) => {
-                    error_output("We were unable to download file.\nMaybe you don't have internet?");
-                }
-            }
+            update_package();
         },
         "install" => {
             let second_args = match args.get(2) {
@@ -202,30 +187,4 @@ fn main() {
             std::process::exit(1);
         }
     }
-}
-
-
-
-
-
-fn help_fn() {
-    println!("==============================================");
-    println!("          BypassOS Package Manager");
-    println!("==============================================");
-    println!("Using:");
-    println!("  bps install <name of package>    --> Install some package");
-    println!("  bps remove <name of package>     --> Remove package");
-    println!("  bps update                       --> Update BypassOS");
-    println!("  bps check                        --> Check for updates");
-    println!("  bps help                         --> Show this menu");
-}
-
-fn error_output(error_text: &str) {
-    println!("");
-    println!("");
-    println!("* * * * * * * * * * * * * * *");
-    println!("Error: {error_text}");
-    println!(" * * * * * * * * * * * * * * *");
-    println!("");
-    println!("");
 }
