@@ -1,7 +1,8 @@
 use crate::usefull_fun::{error_output::{error_output, help_fn}, help_functions::repleace_str};
-use crate::{json_parser::get_arr_of_vers, checker::is_utility_exist};
+use crate::json_parser::get_arr_of_vers;
+use crate::options::useful_fn_4_options::check_db::check_database;
 
-use std::io::{BufRead, BufReader, Write};
+use std::io::Write;
 
 pub fn install_package(args: Vec<String>) {
     let second_args = match args.get(2) {
@@ -48,40 +49,7 @@ pub fn install_package(args: Vec<String>) {
                         }
 
                         println!("[INFO] Checking local data base...");
-                        if let Ok(content) = std::fs::File::open(path) {
-                            let reader = BufReader::new(content);
-                                    
-                            let mut is_utility_downloaded: bool = false;
-
-                            let mut number: i32 = 0;
-                            let mut max_num= 0;
-
-                            for line in reader.lines() {
-                                max_num += 1;
-                                if let Ok(line) = line {
-                                    if let Some(info) = is_utility_exist(line, second_args) {
-                                        is_utility_downloaded = true;
-                                        if let Some(num) = info.get(0) {
-                                            if let Ok(num) = num.trim().parse() {
-                                                number = num;
-                                            }
-                                        }
-                                        if let Some(vers) = package_data.get(0) {
-                                            if let Some(vers_from_local) = info.get(2) {
-                                                if vers == vers_from_local {
-                                                    println!("\n\nThis utility has already been downloaded!");
-                                                    std::process::exit(1);
-                                                }
-                                            }
-                                                
-                                        };
-                                    }
-                                } 
-                            }
-
-                            if number == 0 { 
-                                number = max_num + 1
-                            }
+                        let (is_utility_downloaded, number) = check_database(path, second_args, package_data); 
 
                             if !is_utility_downloaded {
                                 println!("[INFO] Package not found. Downloading...");
@@ -128,8 +96,6 @@ pub fn install_package(args: Vec<String>) {
                                     }
                                 }
                             }
-                        } 
-
                     } else {
                         error_output("Sorry we were unable find your utility inside our storage.\n May you check utility name or send utility name to us and we'll add your utility?");
                     }
