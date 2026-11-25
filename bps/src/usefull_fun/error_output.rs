@@ -4,10 +4,10 @@ pub fn help_fn() {
     println!("==============================================");
     println!("Using:");
     println!("  bps install <name of package>    --> Install some package");
-    println!("  bps remove <name of package>     --> Remove package");
     println!("  bps update                       --> Update BypassOS");
-    println!("  bps check                        --> Check for updates");
     println!("  bps help                         --> Show this menu");
+    println!("  ------------- In development -------------");
+    println!("  bps remove <name of package>     --> Remove package");
 }
 
 pub fn error_output(error_text: &str) {
