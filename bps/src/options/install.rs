@@ -22,96 +22,93 @@ pub fn install_package(args: Vec<String>) {
         }
     };
 
-    let new_version: String;
     let url = "https://raw.githubusercontent.com/bypassOS-dev/storage_bypassOS/refs/heads/main/storage.json";
     println!("[INFO] Downloading file with supported utilites...");
     match ureq::get(url).call() {
         Ok(response) => {
-            if let Ok(text) = response.into_string() {
-                if let Some(json) = get_arr_of_vers(&text) {
-                    if let Some(package_data) = json.get(second_args) {
-                        if let Some(new_version1) = package_data.get(0) {
-                            new_version = new_version1.clone();
-                        } else {
-                            error_output("Json parser couldn't parse package!");
-                            std::process::exit(1)
-                        }
+            let Ok(data_to_text) = response.into_string() else {
+                error_output("Data from server is invalid and we couldn't parse it, sorry.");
+                std::process::exit(1);
+            };
+
+            let Some(json) = get_arr_of_vers(&data_to_text) else {
+                error_output("Data from server is invalid and we couldn't parse it to json, sorry.");
+                std::process::exit(1);
+            };
+
+            let Some(data_about_util) = json.get(second_args) else {
+                error_output("Data was damaget and we couldn't get information about package");
+                std::process::exit(1);
+            };
+
+            let Some(version) = data_about_util.get(0) else {
+                error_output("Data was damaget and we couldn't get information about package");
+                std::process::exit(1);
+            };
                                 
-                        let path = std::path::Path::new("/var/lib/bps/installed_utility.txt");
-                        if !path.exists() {
-                            if let Some(parent) = path.parent() {
-                                let _ = std::fs::create_dir_all(parent);
-                            }
+            let path = std::path::Path::new("/var/lib/bps/installed_utility.txt");
+            if !path.exists() {
+                if let Some(parent) = path.parent() {
+                    let _ = std::fs::create_dir_all(parent);
+                }
 
-                            if let Err(_) = std::fs::File::create(path) {
-                                error_output("We couldn't find and create file 'installed_utility.txt'!\nTry to create file yourself inside '/var/lib/bps/'");
-                            };
-                        }
+                if let Err(_) = std::fs::File::create(path) {
+                    error_output("We couldn't find and create file 'installed_utility.txt'!\nTry to create file yourself inside '/var/lib/bps/'");
+                };
+            }
 
-                        // Here we just check: Is utility inside user's database?
-                        // If we 
-                        println!("[INFO] Checking local data base...");
-                        let (is_utility_downloaded, number) = check_database(path, second_args, package_data); 
+            // Here we just check: Is utility inside user's database?
+            // If we found utility then "is_utility_downloaded" == true and number == the line on which the utility is located
+            // If utility don't downloaded then "is_utility_downloaded" == false and number == amont of ALL LINES!
+            println!("[INFO] Checking local data base...");
+            let (is_utility_downloaded, number) = check_database(path, second_args, data_about_util); 
 
-                        // Just Check for prety output
-                        if !is_utility_downloaded {
-                            println!("[INFO] Package not found. Downloading...");
-                        } else {
-                            println!("[INFO] Package found, but new version is available. So update...");
-                        }
+            // Just Check for prety output
+            if !is_utility_downloaded {
+                println!("[INFO] Package not found. Downloading...");
+            } else {
+                println!("[INFO] Package found, but new version is available. So update...");
+            }
 
+            if let Some(target_url) = data_about_util.get(1) {
+                let archive_path = format!("/tmp/{}", second_args);
 
-                            if let Some(target_url) = package_data.get(1) {
-                                let archive_path = format!("/tmp/{}", second_args);
+                match ureq::get(target_url).call() {
+                    Ok(response) => {
+                        let mut file = std::fs::File::create(&archive_path).expect("Failed to create temp file");
+                        std::io::copy(&mut response.into_reader(), &mut file).expect("Failed to download");
 
-                                match ureq::get(target_url).call() {
-                                    Ok(response) => {
-                                        let mut file = std::fs::File::create(&archive_path).expect("Failed to create temp file");
-                                        std::io::copy(&mut response.into_reader(), &mut file).expect("Failed to download");
+                        println!("[INFO] Extracting archive to system...");
 
-                                        println!("[INFO] Extracting archive to system...");
+                        let status = std::process::Command::new("tar")
+                            .args(["-xzf", &archive_path, "-C", "/"])
+                            .status()
+                            .expect("Extract Error");
 
-                                        let status = std::process::Command::new("tar")
-                                            .args(["-xzf", &archive_path, "-C", "/"])
-                                            .status()
-                                            .expect("Extract Error");
-
-                                        if status.success() {
-                                            println!("[OK] Package {} successfully installed!", second_args);
-                                            if let Some(path) = path.to_str() {
-                                                if is_utility_downloaded {
-                                                    let need_str = format!("{number}. {second_args} ---> {new_version}");
-                                                    if let Ok(_) = repleace_str(path, number, &need_str) {};
-                                                } else {
-                                                    let need_str = format!("{number}. {second_args} ---> {new_version}");
-                                                    if let Ok(mut file) = std::fs::File::options()
-                                                        .append(true)
-                                                        .create(true)
-                                                        .open(path) {
-                                                            let _ = writeln!(file, "{need_str}");
-                                                        }
-                                                }
-                                            }
+                        if status.success() {
+                            println!("[OK] Package {} successfully installed!", second_args);
+                            if let Some(path) = path.to_str() {
+                                if is_utility_downloaded {
+                                    let need_str = format!("{number}. {second_args} ---> {version}");
+                                    if let Ok(_) = repleace_str(path, number, &need_str) {};
+                                } else {
+                                    let need_str = format!("{number}. {second_args} ---> {version}");
+                                    if let Ok(mut file) = std::fs::File::options()
+                                        .append(true)
+                                        .create(true)
+                                        .open(path) {
+                                            let _ = writeln!(file, "{need_str}");
                                         }
-                                    },
-                                    Err(_) => {
-                                        error_output("We were unable to download file.\nMaybe you don't have internet?");
-                                    }
                                 }
                             }
-                    } else {
-                        error_output("Sorry we were unable find your utility inside our storage.\n May you check utility name or send utility name to us and we'll add your utility?");
+                        }
+                    },
+                    Err(_) => {
+                        error_output("We were unable to download file.\nMaybe you don't have internet?");
                     }
-                } else {
-                    error_output("The file downloaded from the server is incorrect! Please let us know!");
                 }
-            }else {
-                error_output("Can't download file!");
-            };
-                    
-        }
-        Err(_) => {
-            error_output("We were unable to download file.\nMaybe you don't have internet?");
-        }
+            }
+        },
+        Err(_) => {}
     }
 }
