@@ -48,14 +48,17 @@ pub fn install_package(args: Vec<String>) {
                             };
                         }
 
+                        // Here we just check: Is utility inside user's database?
+                        // If we 
                         println!("[INFO] Checking local data base...");
                         let (is_utility_downloaded, number) = check_database(path, second_args, package_data); 
 
-                            if !is_utility_downloaded {
-                                println!("[INFO] Package not found. Downloading...");
-                            } else {
-                                println!("[INFO] Package found, but new version is available. So update...");
-                            }
+                        // Just Check for prety output
+                        if !is_utility_downloaded {
+                            println!("[INFO] Package not found. Downloading...");
+                        } else {
+                            println!("[INFO] Package found, but new version is available. So update...");
+                        }
 
 
                             if let Some(target_url) = package_data.get(1) {
