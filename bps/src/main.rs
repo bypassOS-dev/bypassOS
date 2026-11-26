@@ -13,17 +13,13 @@ fn main() {
     let command = match args.get(1) {
         Some(a) => {
             if a.len() < 3 {
-                error_output("non-existent function");
-                help_fn();
-                std::process::exit(1);
+                error_output("non-existent function. Enter to terminal: bps help");
             } else {
                 a
             }
         },
         _ => {
-            error_output("non-existent function");
-            help_fn();
-            std::process::exit(1);
+            error_output("non-existent function. Enter to terminal: bps help");
         }
     };
 
@@ -36,14 +32,11 @@ fn main() {
         "install" => {
             install_package(args);
         },
-
         "help" => {
             help_fn();
         }
         _ => {
-            error_output("non-existent function");
-            help_fn();
-            std::process::exit(1);
+            error_output("non-existent function. Enter to terminal: bps help");
         }
     }
 }

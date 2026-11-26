@@ -10,7 +10,7 @@ pub fn help_fn() {
     println!("  bps remove <name of package>     --> Remove package");
 }
 
-pub fn error_output(error_text: &str) {
+pub fn error_output(error_text: &str) -> !{
     println!("");
     println!("");
     println!("* * * * * * * * * * * * * * *");
@@ -18,4 +18,5 @@ pub fn error_output(error_text: &str) {
     println!(" * * * * * * * * * * * * * * *");
     println!("");
     println!("");
+    std::process::exit(1);
 }

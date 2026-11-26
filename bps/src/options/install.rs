@@ -1,26 +1,17 @@
-use crate::usefull_fun::{error_output::{error_output, help_fn}, help_functions::repleace_str};
+use crate::usefull_fun::{error_output::error_output, help_functions::repleace_str};
 use crate::json_parser::get_arr_of_vers;
 use crate::options::useful_fn_4_options::check_db::check_database;
 
 use std::io::Write;
 
 pub fn install_package(args: Vec<String>) {
-    let second_args = match args.get(2) {
-        Some(a) => {
-            if a.len() >= 2 {
-                a
-            } else {
-                error_output("The utility name cannot be shorter than 1 characters!");
-                help_fn();
-                std::process::exit(1);
-            }
-        },
-        _ => {
-            error_output("Didn't you add what u wanna download?");
-            help_fn();
-            std::process::exit(1);
-        }
+    let Some(second_args) = args.get(2) else {
+        error_output("You don't enter utility name!");
     };
+
+    if second_args.len() < 2 {
+        error_output("The utility name cannot be shorter than 1 characters!");
+    }
 
     let url = "https://raw.githubusercontent.com/bypassOS-dev/storage_bypassOS/refs/heads/main/storage.json";
     println!("[INFO] Downloading file with supported utilites...");
@@ -28,22 +19,18 @@ pub fn install_package(args: Vec<String>) {
         Ok(response) => {
             let Ok(data_to_text) = response.into_string() else {
                 error_output("Data from server is invalid and we couldn't parse it, sorry.");
-                std::process::exit(1);
             };
 
             let Some(json) = get_arr_of_vers(&data_to_text) else {
                 error_output("Data from server is invalid and we couldn't parse it to json, sorry.");
-                std::process::exit(1);
             };
 
             let Some(data_about_util) = json.get(second_args) else {
                 error_output("Data was damaget and we couldn't get information about package");
-                std::process::exit(1);
             };
 
             let Some(version) = data_about_util.get(0) else {
                 error_output("Data was damaget and we couldn't get information about package");
-                std::process::exit(1);
             };
                                 
             let path = std::path::Path::new("/var/lib/bps/installed_utility.txt");
