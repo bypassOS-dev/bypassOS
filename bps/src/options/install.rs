@@ -1,6 +1,6 @@
 use crate::usefull_fun::{error_output::error_output, help_functions::repleace_str};
 use crate::json_parser::get_arr_of_vers;
-use crate::options::useful_fn_4_options::check_db::check_database;
+use crate::options::useful_fn_4_options::{check_db::check_database, check_remove_db::check_removing_db};
 
 use std::io::Write;
 
@@ -47,7 +47,7 @@ pub fn install_package(args: Vec<String>) {
             // Here we just check: Is utility inside user's database?
             // If we found utility then "is_utility_downloaded" == true and number == the line on which the utility is located
             // If utility don't downloaded then "is_utility_downloaded" == false and number == amont of ALL LINES!
-            println!("[INFO] Checking local data base...");
+            println!("[INFO] Checking local database...");
             let (is_utility_downloaded, number) = check_database(path, second_args, data_about_util); 
 
             // Just Check for prety output
@@ -65,8 +65,11 @@ pub fn install_package(args: Vec<String>) {
                         let mut file = std::fs::File::create(&archive_path).expect("Failed to create temp file");
                         std::io::copy(&mut response.into_reader(), &mut file).expect("Failed to download");
 
+                        println!("[INFO] check database for removing psckage...");
+                        let del_path = "/var/lib/bps/utility_for_remove";
+                        check_removing_db(del_path);
                         println!("[INFO] Extracting archive to system...");
-
+                        
                         let status = std::process::Command::new("tar")
                             .args(["-xzf", &archive_path, "-C", "/"])
                             .status()
