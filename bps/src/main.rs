@@ -36,7 +36,7 @@ fn main() {
             help_fn();
         },
         "remove" => {
-            remove();
+            remove(args);
         }
         _ => {
             error_output("non-existent function. Enter to terminal: bps help");

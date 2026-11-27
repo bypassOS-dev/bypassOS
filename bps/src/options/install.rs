@@ -70,9 +70,6 @@ pub fn install_package(args: Vec<String>) {
                         let del_path = "/var/lib/bps/name_utility_for_remove";
                         check_removing_db(del_path);
 
-                        
-
-
                         println!("[INFO] Extracting archive to system...");
                         let status = std::process::Command::new("tar")
                             .args(["-xzf", &archive_path, "-C", "/"])
@@ -121,8 +118,11 @@ pub fn install_package(args: Vec<String>) {
                                         continue;
                                     }
 
-                                    writeln!(out_file, "{line}").unwrap();
+                                    writeln!(out_file, "{clean_lines}").unwrap();
                                 }
+
+                                let _ = std::fs::remove_file("/for_remove.txt");
+
                             } else {
                                 println!("[WARNING] We couldn't find the file responsible for deletion utilits file. Utility will work but we'll can't romove it.")
                             };
