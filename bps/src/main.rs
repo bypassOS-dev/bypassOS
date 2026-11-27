@@ -5,8 +5,8 @@ pub mod usefull_fun;
 
 use options::update::update_package;
 use usefull_fun::error_output::{error_output, help_fn};
-
 use crate::options::install::install_package;
+use options::remove::remove;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
@@ -34,6 +34,9 @@ fn main() {
         },
         "help" => {
             help_fn();
+        },
+        "remove" => {
+            remove();
         }
         _ => {
             error_output("non-existent function. Enter to terminal: bps help");

@@ -2,8 +2,9 @@ use crate::usefull_fun::{error_output::error_output, help_functions::repleace_st
 use crate::json_parser::get_arr_of_vers;
 use crate::options::useful_fn_4_options::{check_db::check_database, check_remove_db::check_removing_db};
 
-use std::io::Write;
-
+use std::fs::File;
+use std::io::{BufRead, BufReader, Write};
+ 
 pub fn install_package(args: Vec<String>) {
     let Some(second_args) = args.get(2) else {
         error_output("You don't enter utility name!");
@@ -65,17 +66,52 @@ pub fn install_package(args: Vec<String>) {
                         let mut file = std::fs::File::create(&archive_path).expect("Failed to create temp file");
                         std::io::copy(&mut response.into_reader(), &mut file).expect("Failed to download");
 
-                        println!("[INFO] check database for removing psckage...");
-                        let del_path = "/var/lib/bps/utility_for_remove";
+                        println!("[INFO] check database for removing package...");
+                        let del_path = "/var/lib/bps/name_utility_for_remove";
                         check_removing_db(del_path);
-                        println!("[INFO] Extracting archive to system...");
+
                         
+
+
+                        println!("[INFO] Extracting archive to system...");
                         let status = std::process::Command::new("tar")
                             .args(["-xzf", &archive_path, "-C", "/"])
                             .status()
                             .expect("Extract Error");
 
                         if status.success() {
+                            println!("[INFO] Update file '/var/lib/bps/name_utility_for_remove'...");
+                            let finish_writing = format!("\n----------{}----------", second_args);
+
+                            let bad_paths = [
+                                "/", "/bin", "/boot", "/dev", "/etc", "/home", 
+                                "/lib", "/lib64", "/opt", "/proc", "/root", 
+                                "/sbin", "/sys", "/tmp", "/usr", "/var"
+                            ];
+
+                            if let Ok(file) = File::open("/for_remove.txt")  {
+                                let reader = BufReader::new(file);
+
+                                for line in reader.lines() {
+                                    let  Ok(line) = line else {
+                                        continue;
+                                    };
+                                    
+                                    let clean_lines = line.trim().trim_end_matches("/");
+
+                                    if clean_lines.is_empty() || !clean_lines.starts_with("/") {
+                                        continue;
+                                    }
+
+                                    if bad_paths.contains(&clean_lines) {
+                                        println!("[WARNING] We found path that may destroed ur sistem but we save your pc!");
+                                        continue;
+                                    }
+                                }
+                            } else {
+                                println!("[WARNING] We couldn't find the file responsible for deletion utilits file. Utility will work but we'll can't romove it.")
+                            };
+
                             println!("[OK] Package {} successfully installed!", second_args);
                             if let Some(path) = path.to_str() {
                                 if is_utility_downloaded {
