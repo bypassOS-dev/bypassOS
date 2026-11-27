@@ -92,6 +92,14 @@ pub fn install_package(args: Vec<String>) {
                             if let Ok(file) = File::open("/for_remove.txt")  {
                                 let reader = BufReader::new(file);
 
+                                let mut out_file = std::fs::OpenOptions::new()
+                                    .create(true)
+                                    .append(true)
+                                    .open("/var/lib/bps/name_utility_for_remove")
+                                    .unwrap();
+
+                                writeln!(out_file, "{finish_writing}").unwrap();
+
                                 for line in reader.lines() {
                                     let  Ok(line) = line else {
                                         continue;
@@ -107,6 +115,13 @@ pub fn install_package(args: Vec<String>) {
                                         println!("[WARNING] We found path that may destroed ur sistem but we save your pc!");
                                         continue;
                                     }
+
+                                    if clean_lines.contains("..") {
+                                        println!("[WARNING] We found path that may destroed ur sistem but we save your pc!");
+                                        continue;
+                                    }
+
+                                    writeln!(out_file, "{line}").unwrap();
                                 }
                             } else {
                                 println!("[WARNING] We couldn't find the file responsible for deletion utilits file. Utility will work but we'll can't romove it.")
