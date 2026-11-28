@@ -17,9 +17,14 @@ pub fn remove(args: Vec<String>) {
     let reader = std::io::BufReader::new(file);
 
     let target_header = format!("----------{}----------", second_args);
-    let mut is_our_package = false;
     let mut found = false;
 
+    // We already did this check while download but better check again:
+    let bad_paths = [
+        "/", "/bin", "/boot", "/dev", "/etc", "/home", 
+        "/lib", "/lib64", "/opt", "/proc", "/root", 
+        "/sbin", "/sys", "/tmp", "/usr", "/var"
+    ];
 
     for line in reader.lines() {
         let Ok(line) = line else {
@@ -29,6 +34,25 @@ pub fn remove(args: Vec<String>) {
 
         let line = line.trim();
         
+        if found {
+            if line.starts_with("----------") {
+                break;
+            }
 
+            let clean_path = line.trim_end_matches('/');
+            if clean_path.is_empty() || !clean_path.starts_with('/') || bad_paths.contains(&clean_path) || clean_path.contains("..") {
+                println!("[WARNING] We found the bad path inside /var/lib/bps/name_utility_for_remove and we assume that YOU edited this file. DON'T DO THAT NEVER! \nIf you don't edited the file that send feedback to us pls <3");
+                continue;
+            }
+
+            if line.ends_with("/") {
+                let _ = std::fs::remove_dir(line);
+            } else {
+                let _ = std::fs::remove_file(line);
+            }
+        }
+        if line == target_header {
+            found = true;
+        }
     }
 }
